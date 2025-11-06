@@ -32,6 +32,8 @@ qemb = "qemb.cli:main"
 
 [tool.setuptools_scm]
 write_to = "src/qemb/_version.py"
+version_scheme = "post-release"
+local_scheme = "no-local-version"
 
 #[project.urls]
 #Homepage = "https://github.com/yourname/qemb"
