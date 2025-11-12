@@ -148,7 +148,8 @@ def main():
         raise ValueError('Input directory does not exist')
     #create the output directory if not exists
     if os.path.exists(args.output_dir):
-        os.system('rm -rf ' + args.output_dir)
+        #os.system('rm -rf ' + args.output_dir)
+        shutil.rmtree(args.output_dir)
     os.makedirs(args.output_dir)
     regenerate_dirs(args.input_dir, args.output_dir)
     work_dirs = find_work_dirs(args.output_dir)

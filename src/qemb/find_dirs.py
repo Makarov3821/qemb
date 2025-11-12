@@ -28,7 +28,7 @@ def clean_contcar(dir):
     with open('POSCAR', 'w') as f:
         for line in lines:
             f.write(line)
-    os.system('mv CONTCAR CONTCAR.old')
+    os.rename('CONTCAR', 'CONTCAR.old')
     os.chdir(curr_dir)
 
 
