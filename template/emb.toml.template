@@ -49,7 +49,7 @@ cluster_ori_point = [1000,1000,1000]
 # the ori will be inherited, but the cut method and radius will also needed
 
 # first decide whether to do pseudo cut
-pseudo_cutting = true
+pseudo_cutting = false
 # pseudo cutting may accept multiple methods, but args should be greater
 pseudo_cutting_sub_method = 1
 
@@ -60,6 +60,7 @@ pseudo_layers = 1000
 pseudo_expand_num = 1000
 
 # then for the point charge cut
+charge_cutting = false
 # but this only accept method sphere or layered cylinder, which means only 1 or 4 available
 charge_cutting_sub_method = 1
 

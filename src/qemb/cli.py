@@ -7,7 +7,6 @@ import argparse
 from .find_dirs import *
 from .jobs import *
 
-
 '''
 
 In this script, first we will read in input directory, output directory, and control file location. 
@@ -15,11 +14,6 @@ Then copy the input directory, regenerating the work directory.
 Then according to the job type in control file, sub the task one by one to lsf.
 
 '''
-
-
-
-
-
 
 def main():
     parser = argparse.ArgumentParser(description='An embedding calculation tool from GGA@PBC to embedded hybrids')
@@ -113,30 +107,33 @@ def main():
         file_control['cluster_ori_point'] = [1000.0,1000.0,1000.0]
     if 'pseudo_cutting' not in file_control:
         file_control['pseudo_cutting'] = False
-    if 'pseudo_cutting_sub_method' not in file_control and file_control['pseudo_cutting'] == True and \
-        (int(file_control['jobtype']) == 2 or file_control['jobtype'] == 1.2):
-        raise ValueError('pseudo_cutting_sub_method not set in control file')
-    if type(file_control['pseudo_cutting_sub_method']) is not int and file_control['pseudo_cutting'] == True and \
-        (int(file_control['jobtype']) == 2 or file_control['jobtype'] == 1.2):
-        raise ValueError('pseudo_cutting_sub_method should be an integer in control file')
-    if 'pseudo_radius' not in file_control and (int(file_control['jobtype']) == 2 or file_control['jobtype'] == 1.3 or file_control['jobtype'] == 1.4):
-        file_control['pseudo_radius'] = 1000.0
-    if 'pseudo_height' not in file_control and (int(file_control['jobtype']) == 2 or file_control['jobtype'] == 1.3 or file_control['jobtype'] == 1.4):
-        file_control['pseudo_height'] = 1000.0
-    if 'pseudo_layers' not in file_control and (int(file_control['jobtype']) == 2 or file_control['jobtype'] == 1.3 or file_control['jobtype'] == 1.4):
-        file_control['pseudo_layers'] = 1000
-    if 'pseudo_expand_num' not in file_control and (int(file_control['jobtype']) == 2 or file_control['jobtype'] == 1.3 or file_control['jobtype'] == 1.4):
-        file_control['pseudo_expand_num'] = 1000
-    if 'charge_cutting_sub_method' not in file_control and (int(file_control['jobtype']) == 2 or file_control['jobtype'] == 1.3 or file_control['jobtype'] == 1.4):
-        raise ValueError('charge_cutting_sub_method not set in control file')
-    if type(file_control['charge_cutting_sub_method']) is not int and (int(file_control['jobtype']) == 2 or file_control['jobtype'] == 1.3 or file_control['jobtype'] == 1.4):
-        raise ValueError('charge_cutting_sub_method should be an integer in control file')
-    if 'charge_radius' not in file_control and (int(file_control['jobtype']) == 2 or file_control['jobtype'] == 1.3 or file_control['jobtype'] == 1.4):
-        file_control['charge_radius'] = 1000.0
-    if 'charge_height' not in file_control and (int(file_control['jobtype']) == 2 or file_control['jobtype'] == 1.3 or file_control['jobtype'] == 1.4):
-        file_control['charge_height'] = 1000.0
-    if 'charge_layers' not in file_control and (int(file_control['jobtype']) == 2 or file_control['jobtype'] == 1.3 or file_control['jobtype'] == 1.4):
-        file_control['charge_layers'] = 1000
+    if 'charge_cutting' not in file_control:
+        file_control['charge_cutting'] = False
+    if (int(file_control['jobtype']) == 2 or file_control['jobtype'] == 1.3 or file_control['jobtype'] == 1.4):
+        if file_control['pseudo_cutting'] == True:
+            if 'pseudo_cutting_sub_method' not in file_control:
+                raise ValueError('pseudo_cutting_sub_method not set in control file')
+            if type(file_control['pseudo_cutting_sub_method']) is not int:
+                raise ValueError('pseudo_cutting_sub_method should be an integer in control file')
+            if 'pseudo_radius' not in file_control:
+                file_control['pseudo_radius'] = 1000.0
+            if 'pseudo_height' not in file_control:
+                file_control['pseudo_height'] = 1000.0
+            if 'pseudo_layers' not in file_control:
+                file_control['pseudo_layers'] = 1000
+            if 'pseudo_expand_num' not in file_control:
+                file_control['pseudo_expand_num'] = 1000
+        if file_control['charge_cutting'] == True:
+            if 'charge_cutting_sub_method' not in file_control:
+                raise ValueError('charge_cutting_sub_method not set in control file')
+            elif type(file_control['charge_cutting_sub_method']) is not int:
+                raise ValueError('charge_cutting_sub_method should be an integer in control file')
+            if 'charge_radius' not in file_control:
+                file_control['charge_radius'] = 1000.0
+            if 'charge_height' not in file_control:
+                file_control['charge_height'] = 1000.0
+            if 'charge_layers' not in file_control:
+                file_control['charge_layers'] = 1000
 
     if 'ctrl_template' not in file_control and (file_control['jobtype'] == 1.2 or file_control['jobtype'] == 1.4):
         print("Warning: ctrl_template not set in control file, all other settings will be default values.")
@@ -173,9 +170,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-            
-
-
-    
-
-    

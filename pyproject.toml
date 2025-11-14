@@ -1,6 +1,6 @@
 [project]
 name = "qemb"
-version = "0.1.1"
+version = "0.1.2"
 #dynamic = ["version"]
 #license = "Apache-2.0"
 description = "A script to do embedded cluster cutting and generate input files for calculations."
