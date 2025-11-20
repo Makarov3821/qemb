@@ -92,9 +92,10 @@ def job_1_1(dir, file_control):
         #print("Writing cluster and embedding atom xyzs in " + dir + "/ref")
         print("Writing cluster and embedding atom xyzs in " + dir)
         write_xyz(cluster_atoms, 'cluster.xyz', ref_scale_factor, ref_lattice)
-        write_xyz(environ_atoms, 'charges.xyz', ref_scale_factor, ref_lattice)
         if len(pseudo_atoms) > 0:
             write_xyz(pseudo_atoms, 'pseudos.xyz', ref_scale_factor, ref_lattice)
+        if len(environ_atoms) > 0:
+            write_xyz(environ_atoms, 'charges.xyz', ref_scale_factor, ref_lattice)
     else:
         print("Unknown error in cutting. Please check.")
     os.chdir(curr_dir)

@@ -36,7 +36,7 @@ def find_ori_dirs(given_dir, supress=False):
     # walk through the directory, if OUTCAR, CONTCAR, and POSCAR are present, then add the directory to the list as a finished directory
     finished_dirs = []
     for root, dirs, files in os.walk(given_dir):
-        if 'OUTCAR' in files and 'CONTCAR' in files and 'POSCAR' in files:
+        if 'OUTCAR' in files and 'CONTCAR' in files and 'POSCAR' in files and 'POTCAR' in files and 'KPOINTS' in files:
             if check_outcar_finished(os.path.join(root, 'OUTCAR')):
                 #use absolute path
                 finished_dirs.append(os.path.abspath(root))

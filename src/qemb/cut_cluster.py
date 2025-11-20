@@ -187,6 +187,8 @@ def expand_base(ori_base_atoms, ori_layered_base_atoms, tmp_expand_size, tmp_z_e
         #if tmp_expand_size is -1, then just copy the ori_base_atoms and ori_layered_base_atoms
         base_atoms = ori_base_atoms_tmp.copy()
         layered_base_atoms = ori_layered_base_atoms_tmp.copy()
+    # sort the layered_base_atoms by z
+    layered_base_atoms.sort(key=lambda x: np.mean([atom[3] for atom in x]))
     return base_atoms, layered_base_atoms
 
 
@@ -592,6 +594,7 @@ def cut_cluster(atoms, scale_factor, lattice, file_control):
             raise ValueError('You should only input height or layers, not both.')
         if height != 1000 and (ori_point[2] - height / norm_c) < 0:
             tmp_z_expand_size = abs(ori_point[2] - height / norm_c)
+            tmp_z_expand_is_num = False
             only_xyz_output = True
             base_atoms, layered_base_atoms = expand_base(ori_base_atoms, ori_layered_base_atoms, -1, tmp_z_expand_size, False)
         elif layers != 1000 and layers > len(ori_layered_base_atoms):
@@ -600,6 +603,8 @@ def cut_cluster(atoms, scale_factor, lattice, file_control):
             only_xyz_output = True
             base_atoms, layered_base_atoms = expand_base(ori_base_atoms, ori_layered_base_atoms, -1, tmp_z_expand_size, tmp_z_expand_is_num)
         else:
+            tmp_z_expand_size = -1
+            tmp_z_expand_is_num = False
             base_atoms = ori_base_atoms
             layered_base_atoms = ori_layered_base_atoms
     elif cluster_minor_method == 3 or cluster_minor_method == 6:
@@ -650,7 +655,7 @@ def cut_cluster(atoms, scale_factor, lattice, file_control):
                     tmp_expand_size = int(round(abs(polygon[i][0]),0))
                 if int(round(abs(polygon[i][1]),0)) > tmp_expand_size:
                     tmp_expand_size = int(round(abs(polygon[i][1]),0))
-            base_atoms, layered_base_atoms = expand_base(ori_base_atoms, ori_layered_base_atoms, tmp_expand_size, -1, False)
+            base_atoms, layered_base_atoms = expand_base(ori_base_atoms, ori_layered_base_atoms, tmp_expand_size, tmp_z_expand_size, tmp_z_expand_is_num)
             if cluster_major_method == 4:
                 polygon, status = get_hex_or_sq(base_atoms, layered_base_atoms, ori_point, expand_num, a, b, c, True)
             else:
@@ -677,7 +682,7 @@ def cut_cluster(atoms, scale_factor, lattice, file_control):
                     tmp_expand_size = int(round(abs(polygon[i][0]),0))
                 if int(round(abs(polygon[i][1]),0)) > tmp_expand_size:
                     tmp_expand_size = int(round(abs(polygon[i][1]),0))
-            base_atoms, layered_base_atoms = expand_base(ori_base_atoms, ori_layered_base_atoms, tmp_expand_size, -1, False)
+            base_atoms, layered_base_atoms = expand_base(ori_base_atoms, ori_layered_base_atoms, tmp_expand_size, tmp_z_expand_size, tmp_z_expand_is_num)
             polygon, status = get_second_expand(base_atoms, layered_base_atoms, ori_point, expand_num, a, b, c)
             only_xyz_output = True
         for i in range(len(base_atoms)):
@@ -703,7 +708,7 @@ def cut_cluster(atoms, scale_factor, lattice, file_control):
 
     #print(len(cluster_atoms))
     #print(len(absorbates))
-
+    
     #now construct the final cluster and environ
     #first is to add the absorbates num to the cluster num, notice the num should be the same as in the atoms
     pure_cluster_num = len(cluster_atoms)
@@ -718,7 +723,7 @@ def cut_cluster(atoms, scale_factor, lattice, file_control):
     
     pseudo_atoms = []
     #if the jobtype is 2 or 1.2, and the pseudo_cutting is True, we need to cut a pseudo cluster
-    if (int(jobtype) == 2 or jobtype == 1.2) and file_control['pseudo_cutting']:
+    if (int(jobtype) == 2 or jobtype == 1.3 or jobtype == 1.4) and file_control['pseudo_cutting']:
         #cut a pseudo cluster for the embedding, just as the cluster
         #the pseudo cluster will inherit the same ori_point as cluster
         pseudo_cut_method = file_control['pseudo_cutting_sub_method']
@@ -734,7 +739,7 @@ def cut_cluster(atoms, scale_factor, lattice, file_control):
         if pseudo_cut_method == 1 or pseudo_cut_method == 2 or pseudo_cut_method == 4:
             if pseudo_radius == 1000:
                 raise ValueError('Radius should be input for pseudo cluster.')
-            if pseudo_radius < radius:
+            if pseudo_radius != 1000 and radius != 1000 and pseudo_radius < radius:
                 raise ValueError('Radius of pseudo cluster should be larger than the cluster.')
         if pseudo_cut_method == 4 or pseudo_cut_method == 5 or pseudo_cut_method == 7:
             if pseudo_height == 1000 and pseudo_layers == 1000:
@@ -876,78 +881,80 @@ def cut_cluster(atoms, scale_factor, lattice, file_control):
         # now exclude the cluster atoms from the pseudo atoms
         pseudo_atoms = [atom for atom in pseudo_atoms if atom not in cluster_atoms]
 
-    #cut a new charge cluster for the embedding, just as the cluster
-    #the charge cluster will inherit the same ori_point as cluster
-    charge_cut_method = file_control['charge_cutting_sub_method']
-    charge_radius = file_control['charge_radius']
-    charge_height = file_control['charge_height']
-    charge_layers = file_control['charge_layers']
 
     charge_atoms = []
-    if charge_cut_method != 1 and charge_cut_method != 4:
-        raise ValueError('Charge cutting method only accept method 1 or 4')
-    #assure charge radius or height or layers is bigger than cluster
-    if charge_radius == 1000:
-        raise ValueError('Radius should be input for charge cluster.')
-    if charge_radius < radius:
-        raise ValueError('Radius of charge cluster should be larger than the cluster.')
-    if charge_cut_method == 4:
-        if charge_height == 1000 and charge_layers == 1000:
-            raise ValueError('If you use method 0.4, you should input the charge height or layers.')
-        if charge_height != 1000 and charge_layers != 1000:
-            raise ValueError('You should only input charge height or layers, not both.')
-        if charge_height != 1000 and charge_height < height:
-            raise ValueError('Height of charge cluster should be larger than the cluster.')
-        if charge_layers != 1000 and charge_layers < layers:
-            raise ValueError('Layers of charge cluster should be larger than the cluster.')
-    
+    if (int(jobtype) == 2 or jobtype == 1.3 or jobtype == 1.4) and file_control['charge_cutting']:
+        #cut a new charge cluster for the embedding, just as the cluster
+        #the charge cluster will inherit the same ori_point as cluster
+        charge_cut_method = file_control['charge_cutting_sub_method']
+        charge_radius = file_control['charge_radius']
+        charge_height = file_control['charge_height']
+        charge_layers = file_control['charge_layers']
 
-    if (charge_radius / norm_a + ori_point[0]) > 1 or (charge_radius / norm_b + ori_point[1]) > 1 \
-        or ((ori_point[2] - charge_radius / norm_c) < 0 and charge_cut_method == 1) \
-        or ((charge_layers != 1000 and charge_layers > len(ori_layered_base_atoms)) and charge_cut_method == 4) \
-        or ((charge_height != 1000 and (ori_point[2] - charge_height / norm_c) < 0) and charge_cut_method == 4):
-        #expand the base_atoms and layered_base_atoms
-        tmp_expand_size = int(max(charge_radius / norm_a + ori_point[0], charge_radius / norm_b + ori_point[1]))
-        tmp_z_expand_is_num = False
+        if charge_cut_method != 1 and charge_cut_method != 4:
+            raise ValueError('Charge cutting method only accept method 1 or 4')
+        #assure charge radius or height or layers is bigger than cluster
+        if charge_radius == 1000:
+            raise ValueError('Radius should be input for charge cluster.')
+        if charge_radius != 1000 and radius != 1000 and charge_radius < radius:
+            raise ValueError('Radius of charge cluster should be larger than the cluster.')
+        if charge_cut_method == 4:
+            if charge_height == 1000 and charge_layers == 1000:
+                raise ValueError('If you use method 0.4, you should input the charge height or layers.')
+            if charge_height != 1000 and charge_layers != 1000:
+                raise ValueError('You should only input charge height or layers, not both.')
+            if charge_height != 1000 and charge_height < height:
+                raise ValueError('Height of charge cluster should be larger than the cluster.')
+            if charge_layers != 1000 and charge_layers < layers:
+                raise ValueError('Layers of charge cluster should be larger than the cluster.')
+        
+
+        if (charge_radius / norm_a + ori_point[0]) > 1 or (charge_radius / norm_b + ori_point[1]) > 1 \
+            or ((ori_point[2] - charge_radius / norm_c) < 0 and charge_cut_method == 1) \
+            or ((charge_layers != 1000 and charge_layers > len(ori_layered_base_atoms)) and charge_cut_method == 4) \
+            or ((charge_height != 1000 and (ori_point[2] - charge_height / norm_c) < 0) and charge_cut_method == 4):
+            #expand the base_atoms and layered_base_atoms
+            tmp_expand_size = int(max(charge_radius / norm_a + ori_point[0], charge_radius / norm_b + ori_point[1]))
+            tmp_z_expand_is_num = False
+            if charge_cut_method == 1:
+                tmp_z_expand_size = abs(ori_point[2] - charge_radius / norm_c)
+            elif charge_cut_method == 4:
+                if charge_height != 1000:
+                    tmp_z_expand_size = abs(ori_point[2] - charge_height / norm_c)
+                elif charge_layers != 1000 and charge_layers > len(ori_layered_base_atoms):
+                    tmp_z_expand_size = charge_layers - len(ori_layered_base_atoms)
+                elif layers != 1000 and charge_layers <= len(ori_layered_base_atoms):
+                    tmp_z_expand_size = -1
+            base_atoms, layered_base_atoms = expand_base(ori_base_atoms, ori_layered_base_atoms, tmp_expand_size, tmp_z_expand_size, tmp_z_expand_is_num)
+        else:
+            base_atoms = ori_base_atoms
+            layered_base_atoms = ori_layered_base_atoms
+        #now we can cut the cluster
+        #1. cut the cluster spherically with a input radius
         if charge_cut_method == 1:
-            tmp_z_expand_size = abs(ori_point[2] - charge_radius / norm_c)
-        elif charge_cut_method == 4:
+            for i in range(len(base_atoms)):
+                dis = direct_distance(base_atoms[i][1:4], ori_point, a, b, c, periodic=False)
+                if dis < charge_radius:
+                    charge_atoms.append(base_atoms[i])
+        #2. cut the cluster into a cylinder with a input radius
+        if charge_cut_method == 4:
+            for i in range(len(base_atoms)):
+                tmp_base_point = [base_atoms[i][1], base_atoms[i][2], 0.0]
+                tmp_ori_point = [ori_point[0], ori_point[1], 0.0]
+                dis = direct_distance(tmp_base_point, tmp_ori_point, a, b, c, periodic=False)
+                if dis < charge_radius:
+                    charge_atoms.append(base_atoms[i])
             if charge_height != 1000:
-                tmp_z_expand_size = abs(ori_point[2] - charge_height / norm_c)
-            elif charge_layers != 1000 and charge_layers > len(ori_layered_base_atoms):
-                tmp_z_expand_size = charge_layers - len(ori_layered_base_atoms)
-            elif layers != 1000 and charge_layers <= len(ori_layered_base_atoms):
-                tmp_z_expand_size = -1
-        base_atoms, layered_base_atoms = expand_base(ori_base_atoms, ori_layered_base_atoms, tmp_expand_size, tmp_z_expand_size, tmp_z_expand_is_num)
-    else:
-        base_atoms = ori_base_atoms
-        layered_base_atoms = ori_layered_base_atoms
-    #now we can cut the cluster
-    #1. cut the cluster spherically with a input radius
-    if charge_cut_method == 1:
-        for i in range(len(base_atoms)):
-            dis = direct_distance(base_atoms[i][1:4], ori_point, a, b, c, periodic=False)
-            if dis < charge_radius:
-                charge_atoms.append(base_atoms[i])
-    #2. cut the cluster into a cylinder with a input radius
-    if charge_cut_method == 4:
-        for i in range(len(base_atoms)):
-            tmp_base_point = [base_atoms[i][1], base_atoms[i][2], 0.0]
-            tmp_ori_point = [ori_point[0], ori_point[1], 0.0]
-            dis = direct_distance(tmp_base_point, tmp_ori_point, a, b, c, periodic=False)
-            if dis < charge_radius:
-                charge_atoms.append(base_atoms[i])
-        if charge_height != 1000:
-            charge_atoms = [atom for atom in charge_atoms if abs(atom[3] - ori_point[2]) <= height]
-        elif charge_layers != 1000:
-            if charge_layers <= 0:
-                raise ValueError('The input layers should be larger than 0.')
-            #remain the atom in selected layers
-            target_layers_atoms = [atom for layer in layered_base_atoms[:charge_layers] for atom in layer]
-            charge_atoms = [atom for atom in charge_atoms if atom in target_layers_atoms]
+                charge_atoms = [atom for atom in charge_atoms if abs(atom[3] - ori_point[2]) <= height]
+            elif charge_layers != 1000:
+                if charge_layers <= 0:
+                    raise ValueError('The input layers should be larger than 0.')
+                #remain the atom in selected layers
+                target_layers_atoms = [atom for layer in layered_base_atoms[:charge_layers] for atom in layer]
+                charge_atoms = [atom for atom in charge_atoms if atom in target_layers_atoms]
 
         #exclude the cluster atoms from the charge atoms
         charge_atoms = [atom for atom in charge_atoms if atom not in cluster_atoms]
-
-        return cluster_atoms, pseudo_atoms, charge_atoms, "Embedding", pure_cluster_num
+        
+    return cluster_atoms, pseudo_atoms, charge_atoms, "Embedding", pure_cluster_num
 
