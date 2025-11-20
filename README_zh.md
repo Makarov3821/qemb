@@ -98,7 +98,9 @@ root_dir_out/
 
 #### 2.3.1 切簇方法
 1： 从ori_point切一个球，对于表面催化经常就是一个半球；
+
 2： 从ori_point切一个圆柱；
+
 3： 近邻法。对于Cu(111)之类的密堆积面如：
 
 ![cutting3_cu(111)](./figs/cut_3_cu111.png)
