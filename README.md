@@ -100,12 +100,15 @@ A full option template with detailed commemt is listed in [emb.toml.template](./
 2: A cylinder from the ori_point.
 
 3: A near expanding. For surface like Cu(111) will be:
+
 ![cutting3_cu(111)](./figs/cut_3_cu111.png)
 
 For surface like Mgo(100) will be:
+
 ![cutting_mgo(100)](./figs/cut_3_mgo.png)
 
 6: Alternative way for NaCl-like system like:
+
 ![another_cutting_mgo(100)](./figs/cut_6_mgo.png)
 
 #### 2.3.2 Some example
@@ -117,6 +120,7 @@ cluster_cutting_minor_method = 5
 cluster_layers = 2
 cluster_expand_num = 2
 ```
+
 ![Cu31 cluster](./figs/cu31_cluster.png)
 
 A Mg-centered Mg9O9 cluster surrounded by a hemispherical pseudoes/point charges:
@@ -130,6 +134,7 @@ charge_cutting = true
 charge_cutting_sub_method = 1
 charge_radius = 8.0
 ```
+
 ![MgO cluster with surrouding point charges](./figs/mg9o9_cluster_with_charges.png)
 
 Another interesting thing is this script will automatically supercell when your input exceeded the original cell. Thus we can make:
@@ -142,6 +147,7 @@ cluster_cutting_minor_method = 7
 cluster_layers = 2
 cluster_expand_num = 15
 ```
+
 ![Big Mgo plain "cluster"](./figs/huge_plain.png)
 
 Or a big rod (based on a 4x4, 3 layered MgO(100) slab):
@@ -152,4 +158,5 @@ cluster_cutting_minor_method = 7
 cluster_layers = 20
 cluster_expand_num = 1
 ```
+
 ![Rod MgO "cluster"](./figs/big_rod.png)
