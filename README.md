@@ -100,19 +100,13 @@ A full option template with detailed commemt is listed in [emb.toml.template](./
 2: A cylinder from the ori_point.
 
 3: A near expanding. For surface like Cu(111) will be:
-<center>
 ![cutting3_cu(111)](./figs/cut_3_cu111.png)
-</center>
 
 For surface like Mgo(100) will be:
-<center>
 ![cutting_mgo(100)](./figs/cut_3_mgo.png)
-</center>
 
 6: Alternative way for NaCl-like system like:
-<center>
 ![another_cutting_mgo(100)](./figs/cut_6_mgo.png)
-</center>
 
 #### 2.3.2 Some example
 A Cu31 clutser:
@@ -123,9 +117,7 @@ cluster_cutting_minor_method = 5
 cluster_layers = 2
 cluster_expand_num = 2
 ```
-<center>
 ![Cu31 cluster](./figs/cu31_cluster.png)
-</center>
 
 A Mg-centered Mg9O9 cluster surrounded by a hemispherical pseudoes/point charges:
 ```toml
@@ -138,9 +130,7 @@ charge_cutting = true
 charge_cutting_sub_method = 1
 charge_radius = 8.0
 ```
-<center>
 ![MgO cluster with surrouding point charges](./figs/mg9o9_cluster_with_charges.png)
-</center>
 
 Another interesting thing is this script will automatically supercell when your input exceeded the original cell. Thus we can make:
 
@@ -152,9 +142,7 @@ cluster_cutting_minor_method = 7
 cluster_layers = 2
 cluster_expand_num = 15
 ```
-<center>
 ![Big Mgo plain "cluster"](./figs/huge_plain.png)
-</center>
 
 Or a big rod (based on a 4x4, 3 layered MgO(100) slab):
 ```toml
@@ -164,6 +152,4 @@ cluster_cutting_minor_method = 7
 cluster_layers = 20
 cluster_expand_num = 1
 ```
-<center>
 ![Rod MgO "cluster"](./figs/big_rod.png)
-</center>
