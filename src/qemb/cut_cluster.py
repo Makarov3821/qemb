@@ -362,7 +362,15 @@ def get_hex_or_sq(base_atoms, layered_base_atoms, ori_point, expand_num, a,b,c, 
         num_cp = num_cp + tmp_expand_size
         first_cluster = []
         polygon_points= [tuple([(num_cp-1) * x + y for x, y in zip(vector[:2], ori_point)]) for vector in sorted_vectors]
-        polygon = Polygon(polygon_points)
+        #polygon = Polygon(polygon_points)
+        try:
+            # 尝试先转 numpy 再转 list，这能清洗掉大部分怪异结构
+            clean_points = np.array(polygon_points, dtype=float).tolist()
+            polygon = Polygon(clean_points)
+        except Exception as e:
+            print(f"数据清洗失败，原始数据类型: {type(polygon_points)}")
+            raise e
+
         for atom in layered_base_atoms[-1]:
             point = Point(tuple(atom[1:3]))
             if polygon.contains(point):
@@ -414,7 +422,14 @@ def get_second_expand(base_atoms, layered_base_atoms, ori_point, expand_num, a, 
         polygon_points= [tuple([(num_cp-1) * x + y for x, y in zip(vector[:2], ori_point)]) for vector in sorted_vectors]
         if len(polygon_points) < 4:
             continue
-        polygon = Polygon(polygon_points)
+        #polygon = Polygon(polygon_points)
+        try:
+            # 尝试先转 numpy 再转 list，这能清洗掉大部分怪异结构
+            clean_points = np.array(polygon_points, dtype=float).tolist()
+            polygon = Polygon(clean_points)
+        except Exception as e:
+            print(f"数据清洗失败，原始数据类型: {type(polygon_points)}")
+            raise e
         for atom in layered_base_atoms[-1]:
             point = Point(tuple(atom[1:3]))
             if polygon.contains(point):
