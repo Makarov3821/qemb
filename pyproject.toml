@@ -1,7 +1,7 @@
 [project]
 name = "qemb"
-version = "0.1.4"
-#dynamic = ["version"]
+#version = "0.1.4"
+dynamic = ["version"]
 license = "Apache-2.0"
 license-files = ["LICENSE"]
 description = "A script to do embedded cluster cutting and generate input files for calculations."
@@ -30,17 +30,18 @@ dev = [
 ]
 
 [build-system]
-#requires = ["setuptools>=61.0", "wheel", "setuptools_scm"]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=61.0", "wheel", "setuptools_scm"]
+#requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project.scripts]
 qemb = "qemb.cli:main"
 
-#[tool.setuptools_scm]
-#write_to = "src/qemb/_version.py"
+[tool.setuptools_scm]
+write_to = "src/qemb/_version.py"
 #version_scheme = "post-release"
-#local_scheme = "no-local-version"
+version_scheme = "guess-next-dev"
+local_scheme = "no-local-version"
 
 [project.urls]
 Homepage = "https://github.com/Makarov3821/qemb"
