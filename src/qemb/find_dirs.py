@@ -1,6 +1,8 @@
 import os
 import shutil
 
+
+
 def check_outcar_finished(outcar):
     # check if the OUTCAR is finished
     with open(outcar, 'r') as f:
@@ -10,26 +12,6 @@ def check_outcar_finished(outcar):
             if 'General timing and accounting informations for this job' in line:
                 return True
     return False
-
-def clean_contcar(dir):
-    curr_dir = os.getcwd()
-    os.chdir(dir)
-    # clean the CONTCAR to a POSCAR
-    with open('CONTCAR', 'r') as f:
-        lines = f.readlines()
-    # if a line is empty, remove everything after it
-    for i in range(len(lines)):
-        if i < 6:
-            continue
-        if not lines[i].strip():
-            lines = lines[0:i]
-            break
-    # write back to the POSCAR
-    with open('POSCAR', 'w') as f:
-        for line in lines:
-            f.write(line)
-    os.rename('CONTCAR', 'CONTCAR.old')
-    os.chdir(curr_dir)
 
 
 def find_ori_dirs(given_dir, supress=False):
@@ -47,13 +29,6 @@ def find_ori_dirs(given_dir, supress=False):
                     print(f'{os.path.abspath(root)} is not finished correctly, thus omitted')
     return finished_dirs
 
-def find_work_dirs(given_dir):
-    work_dirs = []
-    for root, dirs, files in os.walk(given_dir):
-        if 'POSCAR' in files and 'POTCAR' in files and 'KPOINTS' in files:
-            work_dirs.append(os.path.abspath(root))
-    return work_dirs
-
 def find_run_dirs(given_dir):
     run_dirs = []
     for root, dirs, files in os.walk(given_dir):
@@ -61,21 +36,6 @@ def find_run_dirs(given_dir):
             run_dirs.append(os.path.abspath(root))
     return run_dirs
 
-def regenerate_dirs(given_dir, new_root):
-    finished_dirs = find_ori_dirs(given_dir)
-    for dir in finished_dirs:
-        # Create the corresponding directory structure in the new root
-        relative_path = os.path.relpath(dir, given_dir)
-        new_dir = os.path.join(new_root, relative_path)
-        ref_dir = os.path.join(new_dir, 'ref')
-        os.makedirs(ref_dir, exist_ok=True)
-        
-        # Move the specified files to the new ref directory
-        for file_name in ['POTCAR', 'CONTCAR', 'KPOINTS']:
-            file_path = os.path.join(dir, file_name)
-            if os.path.exists(file_path):
-                shutil.copy(file_path, os.path.join(ref_dir, file_name))
-        clean_contcar(ref_dir)
 
 def regenerate_run_dirs(work_dir,run_dir, pseudo_dir):
     # 需要把之前workdir里面的目录重整为新的run_dir

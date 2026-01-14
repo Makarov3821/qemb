@@ -5,7 +5,12 @@ import toml
 import shutil
 import argparse
 from .find_dirs import *
+from .system_class import *
 from .jobs import *
+
+current_supported_jobtype = [
+    1.1, 1.2, 1.3, 1.4
+]
 
 '''
 
@@ -14,6 +19,7 @@ Then copy the input directory, regenerating the work directory.
 Then according to the job type in control file, sub the task one by one to lsf.
 
 '''
+
 
 def main():
     parser = argparse.ArgumentParser(description='An embedding calculation tool from GGA@PBC to embedded hybrids')
@@ -77,12 +83,16 @@ def main():
         raise ValueError('jobtype not set in control file')
     else:
         file_control['jobtype'] = round(file_control['jobtype'],1)
+    if file_control['jobtype'] not in current_supported_jobtype:
+        raise ValueError(f'jobtype {file_control["jobtype"]} not supported currently')
     if "force_xyz_output" not in file_control:
         #file_control['force_xyz_output'] = False
         # As DMET calculation is not available now, turn this default to be true.
         file_control['force_xyz_output'] = True
     if "check_base_num_consistant" not in file_control:
         file_control['check_base_num_consistant'] = False
+    if "inherit_mult_from_outcar" not in file_control:
+        file_control['inherit_mult_from_outcar'] = False
     if 'separation_method' not in file_control:
         file_control['separation_method'] = 1
     if 'absorbate_atoms_num' not in file_control:
@@ -148,24 +158,50 @@ def main():
         #os.system('rm -rf ' + args.output_dir)
         shutil.rmtree(args.output_dir)
     os.makedirs(args.output_dir)
-    regenerate_dirs(args.input_dir, args.output_dir)
-    work_dirs = find_work_dirs(args.output_dir)
-    # put dir with "clean" in front of others
-    work_dirs.sort(key = lambda x: ("clean" not in x, x))
-    global control_base_num
-    if file_control['jobtype'] == 1.1 or file_control['jobtype'] == 1.3:
-        for dir in work_dirs:
-            job_1_1(dir, file_control)
-    elif file_control['jobtype'] == 1.2:
-        for dir in work_dirs:
-            job_1_2(dir, file_control, args.Core_Number, functional=functional, basis=args.basis_set, vdw=vdw, pseudo_calc=False)
-    elif file_control['jobtype'] == 1.4:
-        for dir in work_dirs:
-            job_1_2(dir, file_control, args.Core_Number, functional=functional, basis=args.basis_set, vdw=vdw, pseudo_calc=True)
 
-    else:
-        print("maybe this jobtype has not been implemented yet.")
-        exit(0)
+    # 1. 扫描原始目录
+    ori_dirs = find_ori_dirs(args.input_dir)
+    
+    # 2. 实例化所有系统对象
+    systems = []
+    for ori_dir in ori_dirs:
+        sys_obj = Single_Operation_system(ori_dir, args.input_dir, args.output_dir, file_control['jobtype'])
+        systems.append(sys_obj)
+        
+    # 3. 排序：把 "clean" 的放在前面，以便作为基准
+    systems.sort(key=lambda x: ("clean" not in x.name, x.name))
+    
+    # 4. 循环处理
+    clean_base_num = None
+    
+    for sys in systems:
+        print(f"Processing {sys.name}...")
+        
+        # 步骤 1: 准备环境 (copy files)
+        sys.init_workspace()
+        
+        # 步骤 2: 切簇
+        # 如果是 clean 系统，切完后记录 base_num
+        # 如果是 absorb 系统，传入 base_num 用于检查
+        sys.perform_cut(file_control, control_base_num=clean_base_num)
+        
+        if "clean" in sys.name and file_control.get('check_base_num_consistant'):
+            clean_base_num = sys.pure_cluster_num
+            
+        # 步骤 3: 写出切簇结果
+        sys.write_cluster_output(file_control)
+        
+        # 步骤 4: 如果需要，生成输入文件 (jobtype 1.2/1.4)
+        if file_control['jobtype'] in [1.2, 1.4]:
+            do_pseudo = (file_control['jobtype'] == 1.4)
+            sys.generate_rest_input(
+                file_control, 
+                functional, 
+                args.basis_set, 
+                vdw, 
+                args.Core_Number, 
+                pseudo_calc=do_pseudo
+            )
 
 
 if __name__ == '__main__':

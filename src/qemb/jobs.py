@@ -1,4 +1,5 @@
 import os
+import math
 import shutil
 from .cut_cluster import *
 from .tackle_poscar import *
@@ -34,6 +35,32 @@ def count_mult(atoms):
         return 0
     else:
         return 1
+
+
+def inherit_mult(log):
+    with open(log,"r") as f:
+        #reverse the lines
+        lines = f.readlines()[::-1]
+        #find the first line that contains "Total mag(uB)"
+        for line in lines:
+            #get the total mag(uB) value
+            if 'number of electron' in line:
+                raw_mag = abs(float(line.strip().split()[5]))
+                num_ele = round(float(line.strip().split()[3]),ndigits=0)
+                #print("raw_mag: ",raw_mag)
+                #print("num_ele: ",num_ele)
+                break
+        if num_ele % 2 == 0:
+            if math.ceil(round(raw_mag,ndigits=1)) == 0:
+                mag = 1
+            else:
+                mag = 3
+        else:
+            mag = 2
+            #round the value to int
+            #mag = math.ceil(round(raw_mag,ndigits=1)) + 1
+        return mag
+
 
 
 '''
@@ -114,6 +141,7 @@ def job_1_2(dir, file_control, cores, functional=None, basis=None, vdw=None, pse
         lines = f.readlines()[2:]
     elements = [line.split()[0] for line in lines]
     element_merged = merge_elements(elements)
+    #determine the spin multiplicity
     #count and decide how to determine the spin of the cluster
     #if the cluster has no or little metal atoms, then decide it simply by the number of electrons
     #if the cluster has metal atoms and percentage is more than 50%, then split the cluster,
